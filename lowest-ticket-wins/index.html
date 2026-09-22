@@ -1,0 +1,1043 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lowest Ticket Wins</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&family=Noto+Sans+Ethiopic:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --bg: #f6f7fb;
+    --surface: #ffffff;
+    --surface-2: #eef1f6;
+    --ink: #1b2130;
+    --muted: #5b6472;
+    --line: #dfe3ea;
+    --accent: #2f6f5e;
+    --accent-ink: #1d4a3d;
+    --accent-soft: #e3efe9;
+    --gold: #a5701d;
+    --gold-soft: #faf0dc;
+    --danger: #ab3b34;
+    --danger-soft: #fbe9e8;
+    color-scheme: light;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10131a;
+      --surface: #171b24;
+      --surface-2: #1e2330;
+      --ink: #eef0f4;
+      --muted: #99a1ae;
+      --line: #2a3040;
+      --accent: #4fbfa0;
+      --accent-ink: #bdf0dd;
+      --accent-soft: #1b322c;
+      --gold: #f0a94e;
+      --gold-soft: #3a2c14;
+      --danger: #e2685f;
+      --danger-soft: #3a1f1e;
+      color-scheme: dark;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #10131a;
+    --surface: #171b24;
+    --surface-2: #1e2330;
+    --ink: #eef0f4;
+    --muted: #99a1ae;
+    --line: #2a3040;
+    --accent: #4fbfa0;
+    --accent-ink: #bdf0dd;
+    --accent-soft: #1b322c;
+    --gold: #f0a94e;
+    --gold-soft: #3a2c14;
+    --danger: #e2685f;
+    --danger-soft: #3a1f1e;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'IBM Plex Sans', 'Noto Sans Ethiopic', system-ui, sans-serif;
+    padding-inline: 20px;
+    padding-block: 32px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 620px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .top-row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .lang-switch {
+    display: inline-flex;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 3px;
+    gap: 2px;
+    flex: none;
+  }
+
+  .lang-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'IBM Plex Sans', 'Noto Sans Ethiopic', system-ui, sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 999px;
+    cursor: pointer;
+  }
+
+  .lang-btn.active { background: var(--accent); color: #ffffff; }
+
+  .eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 6px;
+  }
+
+  h1 {
+    font-family: 'Fraunces', 'Noto Sans Ethiopic', serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 6vw, 2.7rem);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+
+  .rules {
+    color: var(--muted);
+    font-size: 0.98rem;
+    line-height: 1.6;
+    max-width: 54ch;
+    margin: 0;
+  }
+
+  .rules strong { color: var(--ink); font-weight: 600; }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    padding: 24px;
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 999px;
+  }
+
+  .pill::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  .pill.open { background: var(--accent-soft); color: var(--accent-ink); }
+  .pill.closed { background: var(--surface-2); color: var(--muted); }
+  .pill.pending { background: var(--gold-soft); color: var(--gold); }
+
+  .prize-block { display: flex; flex-direction: column; gap: 4px; }
+  .prize-label { font-size: 0.8rem; color: var(--muted); }
+  .prize-value {
+    font-family: 'Fraunces', 'Noto Sans Ethiopic', serif;
+    font-weight: 600;
+    font-size: 1.5rem;
+    color: var(--gold);
+    text-wrap: balance;
+  }
+
+  .tally {
+    font-family: 'IBM Plex Mono', 'Noto Sans Ethiopic', monospace;
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .tally b { color: var(--ink); font-weight: 600; }
+
+  form.entry-form {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 6px; }
+
+  .field label {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .field input {
+    font-family: 'IBM Plex Sans', 'Noto Sans Ethiopic', system-ui, sans-serif;
+    font-size: 1rem;
+    padding: 11px 13px;
+    border-radius: 10px;
+    border: 1.5px solid var(--line);
+    background: var(--bg);
+    color: var(--ink);
+  }
+
+  .field input[name="number"] {
+    font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .field input:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .btn {
+    appearance: none;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-family: 'IBM Plex Sans', 'Noto Sans Ethiopic', system-ui, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.15s ease, transform 0.1s ease;
+  }
+
+  .btn:active { transform: scale(0.98); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn.primary { background: var(--accent); color: #ffffff; }
+  .btn.primary:hover:not(:disabled) { opacity: 0.9; }
+
+  .btn.gold { background: var(--gold); color: #ffffff; }
+  .btn.gold:hover:not(:disabled) { opacity: 0.9; }
+
+  .btn.ghost {
+    background: transparent;
+    border: 1.5px solid var(--line);
+    color: var(--ink);
+  }
+  .btn.ghost:hover:not(:disabled) { border-color: var(--accent); }
+
+  .btn.danger-ghost {
+    background: transparent;
+    border: 1.5px solid var(--line);
+    color: var(--danger);
+    padding: 6px 10px;
+    font-size: 0.78rem;
+  }
+  .btn.danger-ghost:hover:not(:disabled) { border-color: var(--danger); background: var(--danger-soft); }
+
+  .error-msg {
+    font-size: 0.85rem;
+    color: var(--danger);
+    margin: 0;
+  }
+
+  .hint {
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  /* Ticket stub confirmation */
+  .stub {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    background: var(--accent-soft);
+    border-radius: 14px;
+    padding: 18px 20px;
+  }
+
+  .stub-number {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--accent-ink);
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  .stub-copy { display: flex; flex-direction: column; gap: 3px; }
+  .stub-copy .headline { font-weight: 600; font-size: 0.95rem; }
+  .stub-copy .sub { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  /* Results */
+  .winner-banner {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 20px;
+    border-radius: 14px;
+    background: var(--gold-soft);
+    margin-bottom: 18px;
+  }
+
+  .winner-banner .label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gold);
+  }
+
+  .winner-banner .name {
+    font-family: 'Fraunces', 'Noto Sans Ethiopic', serif;
+    font-weight: 700;
+    font-size: 1.6rem;
+  }
+
+  .winner-banner .detail { color: var(--muted); font-size: 0.9rem; line-height: 1.55; }
+  .winner-banner .detail b { color: var(--ink); font-family: 'IBM Plex Mono', monospace; }
+
+  .no-winner {
+    padding: 18px 20px;
+    border-radius: 14px;
+    background: var(--surface-2);
+    color: var(--muted);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    margin-bottom: 18px;
+  }
+
+  table.entries {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+  }
+
+  table.entries th {
+    text-align: left;
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 500;
+    padding: 6px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  table.entries td {
+    padding: 9px 8px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  table.entries td.num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  table.entries tr.winning-row td { background: var(--gold-soft); font-weight: 600; }
+  table.entries tr.dupe-row td.num { color: var(--muted); text-decoration: line-through; }
+
+  .table-wrap { overflow-x: auto; }
+
+  .empty-state {
+    color: var(--muted);
+    font-size: 0.9rem;
+    padding: 6px 0 2px;
+  }
+
+  /* Admin booth */
+  .admin-card {
+    border: 1.5px dashed var(--line);
+    border-radius: 18px;
+    padding: 22px;
+    background: var(--surface);
+  }
+
+  .admin-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  .admin-title .dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--gold);
+  }
+
+  .admin-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 14px;
+  }
+
+  .admin-row .field { flex: 1 1 180px; }
+
+  .admin-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+
+  .admin-table-title {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin: 20px 0 8px;
+  }
+
+  footer.note {
+    color: var(--muted);
+    font-size: 0.8rem;
+    text-align: center;
+    line-height: 1.6;
+    padding-top: 4px;
+  }
+
+  @media (max-width: 420px) {
+    .card, .admin-card { padding: 18px; }
+    .stub { flex-direction: column; align-items: flex-start; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+  <header>
+    <div class="top-row">
+      <p class="eyebrow" id="eyebrowText"></p>
+      <div class="lang-switch" id="langSwitch">
+        <button type="button" class="lang-btn" data-lang="en">English</button>
+        <button type="button" class="lang-btn" data-lang="am">አማርኛ</button>
+      </div>
+    </div>
+    <h1 id="titleText"></h1>
+    <p class="rules" id="rulesText"></p>
+  </header>
+
+  <section class="card" id="statusCard">
+    <div class="status-row">
+      <span class="pill pending" id="statusPill">…</span>
+      <span class="tally" id="tallyText"></span>
+    </div>
+    <div class="prize-block">
+      <span class="prize-label" id="prizeLabel"></span>
+      <span class="prize-value" id="prizeValue">—</span>
+    </div>
+  </section>
+
+  <section class="card" id="playerCard"></section>
+
+  <section class="card" id="resultsCard" hidden></section>
+
+  <section class="admin-card" id="adminCard" hidden>
+    <div class="admin-title"><span class="dot"></span> <span id="adminTitleText"></span></div>
+    <div id="adminBody"></div>
+  </section>
+
+  <footer class="note" id="footerNote"></footer>
+</div>
+
+<script>
+(function () {
+  var LANG = {
+    en: {
+      eyebrow: 'A live number-picking game',
+      title: 'Lowest Ticket Wins',
+      rules: 'Pick any whole number. When the draw closes, whoever picked the <strong>lowest number nobody else picked</strong> wins the prize. Numbers picked by more than one person cancel each other out — so the obvious choice isn’t always the safe one.',
+      loading: '…',
+      notStarted: 'Not started',
+      roundOpen: 'Round open',
+      roundClosed: 'Round closed',
+      prizeLabel: 'Prize',
+      tbd: 'To be announced',
+      tallyOpen: '<b>{n}</b> {tickets} in so far',
+      tallyClosed: '<b>{n}</b> {tickets} total',
+      ticketSingular: 'ticket',
+      ticketPlural: 'tickets',
+      notStartedHint: 'The game hasn’t started yet. Check back once the admin opens the first round.',
+      closedHint: 'This round is closed. See the results below.',
+      stubHeadline: 'You’re in, {name}.',
+      stubSub: 'Your ticket is locked in for this round. Results appear here once the draw closes.',
+      labelName: 'Your name',
+      labelNumber: 'Your number',
+      errorName: 'Enter your name so we know who to award the prize to.',
+      errorNumber: 'Enter a whole number between 1 and 1,000,000.',
+      submit: 'Submit ticket',
+      genericError: 'Could not submit your ticket. Try again.',
+      winnerLabel: 'Winner',
+      winnerDetail: 'Picked {number} — the lowest number nobody else chose. Prize: {prize}.',
+      noWinner: 'No unique number this round — every number was picked more than once, so nobody wins. Better luck next round.',
+      colName: 'Name',
+      colNumber: 'Number',
+      noTicketsRound: 'No tickets were submitted this round.',
+      adminTitle: 'Admin controls — only you see this',
+      adminPrizeRound1: 'Prize for round 1',
+      adminPrizePlaceholder: 'e.g. $25 gift card',
+      adminStartRound1: 'Start round 1',
+      adminPrize: 'Prize',
+      adminUpdatePrize: 'Update prize',
+      adminCloseRound: 'Close round & draw winner',
+      adminNewRound: 'Start new round',
+      adminEntriesTitle: 'Round {n} entries ({count})',
+      adminNoEntries: 'No entries yet.',
+      adminRemove: 'Remove',
+      footer: 'Entries are shared live with everyone who opens this page. Only the page owner (or anyone they’ve given edit access to) can set the prize or call the draw.',
+      liveUnavailable: 'Live game data isn’t available in this view. Open this page on claude.ai to play.',
+    },
+    am: {
+      eyebrow: 'የቀጥታ ቁጥር መረጣ ጨዋታ',
+      title: 'ዝቅተኛ ትኬት ያሸንፋል',
+      rules: 'ማንኛውንም ሙሉ ቁጥር ይምረጡ። ዕጣው ሲዘጋ፣ ማንም ሌላ ያልመረጠውን <strong>ዝቅተኛ ቁጥር</strong> የመረጠ ሰው ሽልማቱን ያሸንፋል። ከአንድ በላይ በሆኑ ሰዎች የተመረጡ ቁጥሮች እርስ በርስ ይሰረዛሉ — ስለዚህ ግልጽ የሚመስለው ምርጫ ሁልጊዜ ደህንነቱ የተጠበቀ አይደለም።',
+      loading: '…',
+      notStarted: 'ገና አልጀመረም',
+      roundOpen: 'ዙር ክፍት ነው',
+      roundClosed: 'ዙር ተዘግቷል',
+      prizeLabel: 'ሽልማት',
+      tbd: 'በኋላ ይገለጻል',
+      tallyOpen: 'እስካሁን <b>{n}</b> {tickets} ገብተዋል',
+      tallyClosed: 'በአጠቃላይ <b>{n}</b> {tickets}',
+      ticketSingular: 'ትኬት',
+      ticketPlural: 'ትኬቶች',
+      notStartedHint: 'ጨዋታው ገና አልጀመረም። አስተዳዳሪው የመጀመሪያውን ዙር እስኪከፍት ድረስ ቆይተው ይመልከቱ።',
+      closedHint: 'ይህ ዙር ተዘግቷል። ውጤቱን ከታች ይመልከቱ።',
+      stubHeadline: 'ገብተዋል፣ {name}።',
+      stubSub: 'ትኬትዎ ለዚህ ዙር ተመዝግቧል። ዕጣው ሲዘጋ ውጤቱ እዚህ ይታያል።',
+      labelName: 'ስምዎ',
+      labelNumber: 'ቁጥርዎ',
+      errorName: 'ሽልማቱን ለማን መስጠት እንደሚገባ እንድናውቅ ስምዎን ያስገቡ።',
+      errorNumber: 'ከ1 እስከ 1,000,000 ያለ ሙሉ ቁጥር ያስገቡ።',
+      submit: 'ትኬት አስገባ',
+      genericError: 'ትኬትዎን ማስገባት አልተቻለም። እንደገና ይሞክሩ።',
+      winnerLabel: 'አሸናፊ',
+      winnerDetail: '{number}ን መርጠዋል — ማንም ያልመረጠው ዝቅተኛ ቁጥር። ሽልማት፦ {prize}።',
+      noWinner: 'በዚህ ዙር ልዩ ቁጥር አልነበረም — እያንዳንዱ ቁጥር ከአንድ ጊዜ በላይ ተመርጧል፣ ስለዚህ ማንም አላሸነፈም። በሚቀጥለው ዙር መልካም እድል።',
+      colName: 'ስም',
+      colNumber: 'ቁጥር',
+      noTicketsRound: 'በዚህ ዙር ምንም ትኬት አልገባም።',
+      adminTitle: 'የአስተዳዳሪ መቆጣጠሪያ — እርስዎ ብቻ ይህን ያዩታል',
+      adminPrizeRound1: 'ለዙር 1 ሽልማት',
+      adminPrizePlaceholder: 'ለምሳሌ የ$25 ስጦታ ካርድ',
+      adminStartRound1: 'ዙር 1ን ጀምር',
+      adminPrize: 'ሽልማት',
+      adminUpdatePrize: 'ሽልማት አዘምን',
+      adminCloseRound: 'ዙር ዝጋና አሸናፊ ምረጥ',
+      adminNewRound: 'አዲስ ዙር ጀምር',
+      adminEntriesTitle: 'የዙር {n} ግቤቶች ({count})',
+      adminNoEntries: 'እስካሁን ምንም ግቤት የለም።',
+      adminRemove: 'አስወግድ',
+      footer: 'ግቤቶች ይህን ገጽ ለሚከፍት ለሁሉም በቀጥታ ይጋራሉ። የገጹ ባለቤት (ወይም የአርትዖት ፈቃድ የሰጣቸው ሰዎች) ብቻ ሽልማቱን ማዘጋጀት ወይም ዕጣውን መዝጋት ይችላሉ።',
+      liveUnavailable: 'የቀጥታ ጨዋታ መረጃ በዚህ እይታ አልተገኘም። ለመጫወት claude.ai ላይ ይህን ገጽ ይክፈቱ።',
+    }
+  };
+
+  function detectLang() {
+    try {
+      var saved = localStorage.getItem('lowestTicket.lang');
+      if (saved === 'am' || saved === 'en') return saved;
+    } catch (e) { /* ignore */ }
+    var nav = ((navigator.language || navigator.userLanguage || '') + '').toLowerCase();
+    return nav.indexOf('am') === 0 ? 'am' : 'en';
+  }
+
+  function t(key, vars) {
+    var dict = LANG[state.lang] || LANG.en;
+    var str = dict[key] != null ? dict[key] : (LANG.en[key] || key);
+    if (vars) {
+      Object.keys(vars).forEach(function (k) {
+        str = str.split('{' + k + '}').join(vars[k]);
+      });
+    }
+    return str;
+  }
+
+  var els = {
+    eyebrowText: document.getElementById('eyebrowText'),
+    titleText: document.getElementById('titleText'),
+    rulesText: document.getElementById('rulesText'),
+    langSwitch: document.getElementById('langSwitch'),
+    statusPill: document.getElementById('statusPill'),
+    tallyText: document.getElementById('tallyText'),
+    prizeLabel: document.getElementById('prizeLabel'),
+    prizeValue: document.getElementById('prizeValue'),
+    playerCard: document.getElementById('playerCard'),
+    resultsCard: document.getElementById('resultsCard'),
+    adminCard: document.getElementById('adminCard'),
+    adminTitleText: document.getElementById('adminTitleText'),
+    adminBody: document.getElementById('adminBody'),
+    footerNote: document.getElementById('footerNote'),
+  };
+
+  var state = {
+    lang: detectLang(),
+    dbReady: false,
+    isAdmin: false,
+    gameExists: false,
+    game: null, // { status, prize, roundId, winner, updatedAt }
+    entries: [], // [{ id, name, number, roundId, submittedAt }]
+    mySubmission: loadMySubmission(),
+    submitting: false,
+    submitError: '',
+    adminPrizeDraft: '',
+    adminBusy: false,
+  };
+
+  function setLang(lang) {
+    if (lang !== 'en' && lang !== 'am') return;
+    state.lang = lang;
+    try { localStorage.setItem('lowestTicket.lang', lang); } catch (e) { /* ignore */ }
+    renderStaticText();
+    render();
+  }
+
+  Array.prototype.forEach.call(els.langSwitch.querySelectorAll('.lang-btn'), function (btn) {
+    btn.addEventListener('click', function () { setLang(btn.getAttribute('data-lang')); });
+  });
+
+  function loadMySubmission() {
+    try {
+      var raw = localStorage.getItem('lowestTicket.mySubmission');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function saveMySubmission(sub) {
+    try {
+      localStorage.setItem('lowestTicket.mySubmission', JSON.stringify(sub));
+    } catch (e) { /* ignore */ }
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str == null ? '' : String(str);
+    return div.innerHTML;
+  }
+
+  function currentRoundEntries() {
+    if (!state.game) return [];
+    return state.entries.filter(function (e) { return e.roundId === state.game.roundId; });
+  }
+
+  function computeWinner(entries) {
+    var counts = {};
+    entries.forEach(function (e) {
+      counts[e.number] = (counts[e.number] || 0) + 1;
+    });
+    var uniqueNums = Object.keys(counts)
+      .filter(function (n) { return counts[n] === 1; })
+      .map(Number);
+    if (!uniqueNums.length) return null;
+    var lowest = Math.min.apply(null, uniqueNums);
+    var winEntry = entries.find(function (e) { return e.number === lowest; });
+    return winEntry ? { name: winEntry.name, number: lowest } : null;
+  }
+
+  function renderStaticText() {
+    document.body.lang = state.lang;
+    els.eyebrowText.textContent = t('eyebrow');
+    els.titleText.textContent = t('title');
+    els.rulesText.innerHTML = t('rules');
+    els.prizeLabel.textContent = t('prizeLabel');
+    els.adminTitleText.textContent = t('adminTitle');
+    els.footerNote.textContent = t('footer');
+    Array.prototype.forEach.call(els.langSwitch.querySelectorAll('.lang-btn'), function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-lang') === state.lang);
+    });
+  }
+
+  function render() {
+    renderStatus();
+    renderPlayerCard();
+    renderResultsCard();
+    renderAdminCard();
+  }
+
+  function renderStatus() {
+    var round = currentRoundEntries();
+    if (!state.gameExists) {
+      els.statusPill.className = 'pill pending';
+      els.statusPill.textContent = t('notStarted');
+      els.prizeValue.textContent = t('tbd');
+      els.tallyText.textContent = '';
+      return;
+    }
+    var open = state.game.status === 'open';
+    els.statusPill.className = 'pill ' + (open ? 'open' : 'closed');
+    els.statusPill.textContent = open ? t('roundOpen') : t('roundClosed');
+    els.prizeValue.textContent = state.game.prize || t('tbd');
+    var ticketWord = round.length === 1 ? t('ticketSingular') : t('ticketPlural');
+    els.tallyText.innerHTML = t(open ? 'tallyOpen' : 'tallyClosed', { n: round.length, tickets: ticketWord });
+  }
+
+  function renderPlayerCard() {
+    if (!state.gameExists) {
+      els.playerCard.innerHTML = '<p class="hint">' + escapeHtml(t('notStartedHint')) + '</p>';
+      return;
+    }
+
+    var already = state.mySubmission && state.mySubmission.roundId === state.game.roundId
+      ? state.mySubmission
+      : null;
+
+    if (state.game.status !== 'open') {
+      els.playerCard.innerHTML = '<p class="hint">' + escapeHtml(t('closedHint')) + '</p>';
+      return;
+    }
+
+    if (already) {
+      els.playerCard.innerHTML =
+        '<div class="stub">' +
+          '<div class="stub-number">' + escapeHtml(already.number) + '</div>' +
+          '<div class="stub-copy">' +
+            '<span class="headline">' + escapeHtml(t('stubHeadline', { name: already.name })) + '</span>' +
+            '<span class="sub">' + escapeHtml(t('stubSub')) + '</span>' +
+          '</div>' +
+        '</div>';
+      return;
+    }
+
+    els.playerCard.innerHTML =
+      '<form class="entry-form" id="entryForm">' +
+        '<div class="field">' +
+          '<label for="entryName">' + escapeHtml(t('labelName')) + '</label>' +
+          '<input id="entryName" name="name" type="text" maxlength="40" autocomplete="off" required>' +
+        '</div>' +
+        '<div class="field">' +
+          '<label for="entryNumber">' + escapeHtml(t('labelNumber')) + '</label>' +
+          '<input id="entryNumber" name="number" type="number" step="1" min="1" max="1000000" inputmode="numeric" required>' +
+        '</div>' +
+        (state.submitError ? '<p class="error-msg">' + escapeHtml(state.submitError) + '</p>' : '') +
+        '<button type="submit" class="btn primary" id="submitBtn">' + escapeHtml(t('submit')) + '</button>' +
+      '</form>';
+
+    var form = document.getElementById('entryForm');
+    var btn = document.getElementById('submitBtn');
+    if (state.submitting) btn.disabled = true;
+
+    form.addEventListener('submit', function (ev) {
+      ev.preventDefault();
+      if (state.submitting) return;
+      var name = form.elements.name.value.trim();
+      var numberRaw = form.elements.number.value;
+      var number = Math.trunc(Number(numberRaw));
+
+      if (!name) {
+        state.submitError = t('errorName');
+        render();
+        return;
+      }
+      if (!Number.isFinite(number) || String(numberRaw).trim() === '' || number < 1 || number > 1000000) {
+        state.submitError = t('errorNumber');
+        render();
+        return;
+      }
+
+      state.submitError = '';
+      state.submitting = true;
+      render();
+
+      submitEntry(name, number)
+        .then(function () {
+          var sub = { name: name, number: number, roundId: state.game.roundId };
+          state.mySubmission = sub;
+          saveMySubmission(sub);
+          state.submitting = false;
+          render();
+        })
+        .catch(function (err) {
+          state.submitting = false;
+          state.submitError = (err && err.message) || t('genericError');
+          render();
+        });
+    });
+  }
+
+  function renderResultsCard() {
+    if (!state.gameExists || state.game.status !== 'closed') {
+      els.resultsCard.hidden = true;
+      return;
+    }
+    els.resultsCard.hidden = false;
+
+    var round = currentRoundEntries().slice().sort(function (a, b) { return a.number - b.number; });
+    var winner = state.game.winner;
+    var counts = {};
+    round.forEach(function (e) { counts[e.number] = (counts[e.number] || 0) + 1; });
+
+    var banner = winner
+      ? '<div class="winner-banner">' +
+          '<span class="label">' + escapeHtml(t('winnerLabel')) + '</span>' +
+          '<span class="name">' + escapeHtml(winner.name) + '</span>' +
+          '<span class="detail">' + t('winnerDetail', {
+            number: '<b>' + escapeHtml(winner.number) + '</b>',
+            prize: escapeHtml(state.game.prize || t('tbd')),
+          }) + '</span>' +
+        '</div>'
+      : '<div class="no-winner">' + escapeHtml(t('noWinner')) + '</div>';
+
+    var rows = round.map(function (e) {
+      var isWinner = winner && e.number === winner.number && e.name === winner.name;
+      var isDupe = counts[e.number] > 1;
+      return '<tr class="' + (isWinner ? 'winning-row' : isDupe ? 'dupe-row' : '') + '">' +
+        '<td>' + escapeHtml(e.name) + '</td>' +
+        '<td class="num">' + escapeHtml(e.number) + '</td>' +
+      '</tr>';
+    }).join('');
+
+    els.resultsCard.innerHTML =
+      banner +
+      (round.length
+        ? '<div class="table-wrap"><table class="entries"><thead><tr><th>' + escapeHtml(t('colName')) + '</th><th>' + escapeHtml(t('colNumber')) + '</th></tr></thead><tbody>' + rows + '</tbody></table></div>'
+        : '<p class="empty-state">' + escapeHtml(t('noTicketsRound')) + '</p>');
+  }
+
+  function renderAdminCard() {
+    if (!state.isAdmin) {
+      els.adminCard.hidden = true;
+      return;
+    }
+    els.adminCard.hidden = false;
+
+    var round = currentRoundEntries().slice().sort(function (a, b) { return a.submittedAt < b.submittedAt ? -1 : 1; });
+    var open = state.gameExists && state.game.status === 'open';
+    var prizeDefault = state.gameExists ? (state.game.prize || '') : '';
+
+    var html = '';
+
+    if (!state.gameExists) {
+      html +=
+        '<div class="field">' +
+          '<label for="adminPrizeStart">' + escapeHtml(t('adminPrizeRound1')) + '</label>' +
+          '<input id="adminPrizeStart" type="text" maxlength="80" placeholder="' + escapeHtml(t('adminPrizePlaceholder')) + '" value="' + escapeHtml(state.adminPrizeDraft) + '">' +
+        '</div>' +
+        '<div class="admin-actions">' +
+          '<button class="btn gold" id="startRoundBtn"' + (state.adminBusy ? ' disabled' : '') + '>' + escapeHtml(t('adminStartRound1')) + '</button>' +
+        '</div>';
+    } else {
+      html +=
+        '<div class="admin-row">' +
+          '<div class="field">' +
+            '<label for="adminPrizeEdit">' + escapeHtml(t('adminPrize')) + '</label>' +
+            '<input id="adminPrizeEdit" type="text" maxlength="80" value="' + escapeHtml(prizeDefault) + '">' +
+          '</div>' +
+        '</div>' +
+        '<div class="admin-actions">' +
+          '<button class="btn ghost" id="updatePrizeBtn"' + (state.adminBusy ? ' disabled' : '') + '>' + escapeHtml(t('adminUpdatePrize')) + '</button>' +
+          (open
+            ? '<button class="btn gold" id="closeRoundBtn"' + (state.adminBusy || !round.length ? ' disabled' : '') + '>' + escapeHtml(t('adminCloseRound')) + '</button>'
+            : '<button class="btn primary" id="newRoundBtn"' + (state.adminBusy ? ' disabled' : '') + '>' + escapeHtml(t('adminNewRound')) + '</button>') +
+        '</div>' +
+        '<p class="admin-table-title">' + escapeHtml(t('adminEntriesTitle', { n: state.game.roundId, count: round.length })) + '</p>' +
+        (round.length
+          ? '<div class="table-wrap"><table class="entries"><thead><tr><th>' + escapeHtml(t('colName')) + '</th><th>' + escapeHtml(t('colNumber')) + '</th><th></th></tr></thead><tbody>' +
+              round.map(function (e) {
+                return '<tr><td>' + escapeHtml(e.name) + '</td><td class="num">' + escapeHtml(e.number) + '</td>' +
+                  '<td><button class="btn danger-ghost" data-remove="' + escapeHtml(e.id) + '">' + escapeHtml(t('adminRemove')) + '</button></td></tr>';
+              }).join('') +
+            '</tbody></table></div>'
+          : '<p class="empty-state">' + escapeHtml(t('adminNoEntries')) + '</p>');
+    }
+
+    els.adminBody.innerHTML = html;
+
+    var startBtn = document.getElementById('startRoundBtn');
+    if (startBtn) {
+      startBtn.addEventListener('click', function () {
+        var prizeInput = document.getElementById('adminPrizeStart');
+        runAdminAction(function () { return startNewRound(prizeInput.value.trim()); });
+      });
+    }
+
+    var updateBtn = document.getElementById('updatePrizeBtn');
+    if (updateBtn) {
+      updateBtn.addEventListener('click', function () {
+        var prizeInput = document.getElementById('adminPrizeEdit');
+        runAdminAction(function () { return updatePrize(prizeInput.value.trim()); });
+      });
+    }
+
+    var closeBtn = document.getElementById('closeRoundBtn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', function () {
+        runAdminAction(closeRound);
+      });
+    }
+
+    var newRoundBtn = document.getElementById('newRoundBtn');
+    if (newRoundBtn) {
+      newRoundBtn.addEventListener('click', function () {
+        var prizeInput = document.getElementById('adminPrizeEdit');
+        runAdminAction(function () { return startNewRound(prizeInput.value.trim()); });
+      });
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll('[data-remove]'), function (btn) {
+      btn.addEventListener('click', function () {
+        runAdminAction(function () { return removeEntry(btn.getAttribute('data-remove')); });
+      });
+    });
+  }
+
+  function runAdminAction(fn) {
+    if (state.adminBusy) return;
+    state.adminBusy = true;
+    render();
+    Promise.resolve()
+      .then(fn)
+      .catch(function (err) {
+        console.error(err);
+      })
+      .then(function () {
+        state.adminBusy = false;
+        render();
+      });
+  }
+
+  // -- db wiring --------------------------------------------------------
+
+  var db, userCap, gameRef, entriesCol;
+
+  function submitEntry(name, number) {
+    return entriesCol.add({
+      name: name,
+      number: number,
+      roundId: state.game.roundId,
+      submittedAt: new Date().toISOString(),
+    });
+  }
+
+  function updatePrize(prize) {
+    return gameRef.update({ prize: prize, updatedAt: new Date().toISOString() });
+  }
+
+  function startNewRound(prize) {
+    var nextRoundId = (state.game && state.game.roundId ? state.game.roundId : 0) + 1;
+    var staleEntries = state.entries.slice();
+    return gameRef.set({
+      status: 'open',
+      prize: prize,
+      roundId: nextRoundId,
+      winner: null,
+      updatedAt: new Date().toISOString(),
+    }).then(function () {
+      return Promise.allSettled(staleEntries.map(function (e) {
+        return entriesCol.doc(e.id).delete();
+      }));
+    });
+  }
+
+  function closeRound() {
+    var round = currentRoundEntries();
+    var winner = computeWinner(round);
+    return gameRef.update({
+      status: 'closed',
+      winner: winner,
+      updatedAt: new Date().toISOString(),
+    });
+  }
+
+  function removeEntry(id) {
+    return entriesCol.doc(id).delete();
+  }
+
+  function boot() {
+    renderStaticText();
+    render();
+
+    if (!window.claude || !window.claude.use) {
+      state.dbReady = false;
+      return;
+    }
+
+    Promise.all([window.claude.use('db'), window.claude.use('user')]).then(function (results) {
+      db = results[0];
+      userCap = results[1];
+
+      if (!db) {
+        els.playerCard.innerHTML = '<p class="hint">' + escapeHtml(t('liveUnavailable')) + '</p>';
+        return;
+      }
+
+      gameRef = db.doc('game/state');
+      entriesCol = db.collection('entries');
+
+      if (userCap) {
+        userCap.canEdit().then(function (canEdit) {
+          state.isAdmin = !!canEdit;
+          render();
+        });
+      }
+
+      gameRef.onSnapshot(function (snap) {
+        state.gameExists = snap.exists;
+        state.game = snap.exists ? snap.data() : null;
+        render();
+      }, function (err) {
+        console.error('game snapshot error', err);
+      });
+
+      entriesCol.limit(1000).onSnapshot(function (qs) {
+        state.entries = qs.docs.map(function (d) {
+          var data = d.data();
+          return {
+            id: d.id,
+            name: data.name,
+            number: data.number,
+            roundId: data.roundId,
+            submittedAt: data.submittedAt,
+          };
+        });
+        render();
+      }, function (err) {
+        console.error('entries snapshot error', err);
+      });
+    });
+  }
+
+  boot();
+})();
+</script>
+</body>
+</html>

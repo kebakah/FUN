@@ -18,3 +18,10 @@ Then visit `http://localhost:8000`.
 - Too high / too low feedback with a guess history
 - Attempt counter and a best-score record per difficulty (saved in `localStorage`)
 - Fully responsive, no dependencies
+
+## Other games in this repo
+
+- [`lowest-ticket-wins/`](./lowest-ticket-wins) — "lowest unique number
+  wins" game with an admin panel and English/Amharic language switch.
+  Built as a Claude Artifact; see its README for why the copy here is
+  reference-only.
